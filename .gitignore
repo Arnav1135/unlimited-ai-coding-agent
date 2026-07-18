@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+build/
+*.log
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# Docker/Data
+*data/
+*.sqlite

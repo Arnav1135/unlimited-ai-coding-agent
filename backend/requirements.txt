@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+langgraph
+langchain
+langchain-community
+ollama
+psycopg2-binary
+redis
+chromadb
+pydantic
+python-dotenv
+websockets
