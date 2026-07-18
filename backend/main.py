@@ -40,6 +40,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if final_state.get("error"):
                     await websocket.send_json({"type": "error", "message": f"Task failed after retries: {final_state['error']}"})
                 else:
+                    await websocket.send_json({"type": "code", "code": final_state.get("code", "")})
                     await websocket.send_json({"type": "success", "message": "Task completed and verified successfully."})
                 
     except WebSocketDisconnect:

@@ -14,13 +14,33 @@ export default function Home() {
     { role: 'agent', content: 'Welcome to your Local Unlimited AI Coding Agent. What shall we build?' }
   ]);
   const terminalRef = useRef<any>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const [editorContent, setEditorContent] = useState("# The agent will write code here autonomously\ndef hello_agent():\n    print('Initializing local intelligence...')\n");
 
   // Initialize WebSocket using the reverse proxy port 3000
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:3000/ws");
+    wsRef.current = ws;
     
     ws.onopen = () => {
       console.log("Connected to Agent Backend via port 3000.");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "plan" || data.type === "info") {
+          setChatLog(prev => [...prev, { role: 'agent', content: data.message }]);
+        } else if (data.type === "success") {
+          setChatLog(prev => [...prev, { role: 'agent', content: `Success: ${data.message}` }]);
+        } else if (data.type === "error") {
+          setChatLog(prev => [...prev, { role: 'agent', content: `Error: ${data.message}` }]);
+        } else if (data.type === "code") {
+           setEditorContent(data.code);
+        }
+      } catch (err) {
+        console.error("Failed to parse websocket message", err);
+      }
     };
     
     return () => ws.close();
@@ -30,7 +50,13 @@ export default function Home() {
     e.preventDefault();
     if (!prompt.trim()) return;
     setChatLog([...chatLog, { role: 'user', content: prompt }]);
-    // We would send this to our FastAPI backend via WebSocket or REST
+    
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "start_task", task: prompt }));
+    } else {
+      setChatLog(prev => [...prev, { role: 'agent', content: "Error: Not connected to backend." }]);
+    }
+    
     setPrompt("");
   };
 
@@ -108,7 +134,7 @@ export default function Home() {
             height="100%"
             defaultLanguage="python"
             theme="vs-dark"
-            defaultValue="# The agent will write code here autonomously&#10;def hello_agent():&#10;    print('Initializing local intelligence...')&#10;"
+            value={editorContent}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
