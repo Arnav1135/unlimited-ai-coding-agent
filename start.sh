@@ -27,7 +27,7 @@ source venv/bin/activate
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
 # Run in background
-uvicorn main:app --reload --port 8000 &
+uvicorn main:app --reload --port 8080 &
 BACKEND_PID=$!
 cd ..
 echo ""
@@ -46,8 +46,8 @@ echo ""
 
 echo "========================================================"
 echo "  Stack is running!"
-echo "  - Frontend: http://localhost:3000"
-echo "  - Backend:  http://localhost:8000"
+echo "  - App URL: http://localhost:3000"
+echo "  - Backend runs internally on port 8080"
 echo "  - Ensure Ollama is running separately for AI features."
 echo "  Press Ctrl+C to stop all services."
 echo "========================================================"

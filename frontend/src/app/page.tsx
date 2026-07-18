@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Send, TerminalSquare, Code, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -13,6 +13,18 @@ export default function Home() {
   const [chatLog, setChatLog] = useState([
     { role: 'agent', content: 'Welcome to your Local Unlimited AI Coding Agent. What shall we build?' }
   ]);
+  const terminalRef = useRef<any>(null);
+
+  // Initialize WebSocket using the reverse proxy port 3000
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:3000/ws");
+    
+    ws.onopen = () => {
+      console.log("Connected to Agent Backend via port 3000.");
+    };
+    
+    return () => ws.close();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,7 +131,7 @@ export default function Home() {
           </div>
           <div className="flex-1 p-4 font-mono text-sm text-neutral-300 overflow-y-auto">
             <p className="text-blue-400">$ agent start --local</p>
-            <p className="text-green-400">✓ Connected to FastAPI backend</p>
+            <p className="text-green-400">✓ Connected to FastAPI backend via port 3000</p>
             <p className="text-green-400">✓ Ollama model loaded</p>
             <p className="text-neutral-500 mt-2">Waiting for instructions...</p>
           </div>
