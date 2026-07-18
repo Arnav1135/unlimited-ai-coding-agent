@@ -6,6 +6,10 @@ echo "========================================================"
 echo ""
 
 echo "[1/3] Starting Docker Infrastructure (Postgres, Redis, ChromaDB)..."
+if [ ! -f ".env" ]; then
+    echo "Creating default .env file..."
+    cp .env.example .env
+fi
 docker-compose up -d
 if [ $? -ne 0 ]; then
     echo "[ERROR] Failed to start Docker services. Ensure Docker Desktop/Daemon is running."
