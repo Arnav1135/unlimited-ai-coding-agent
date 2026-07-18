@@ -25,7 +25,7 @@ if not exist "venv\" (
 )
 call venv\Scripts\activate
 echo Installing Python dependencies...
-pip install -r requirements.txt
+call pip install -r requirements.txt
 start "FastAPI Backend" cmd /c "uvicorn main:app --reload --port 8080"
 cd ..
 echo.
@@ -34,7 +34,7 @@ echo [3/3] Setting up and starting Next.js Frontend...
 cd frontend
 if not exist "node_modules\" (
     echo Installing Node dependencies...
-    npm install
+    call npm install
 )
 start "Next.js Frontend" cmd /c "npm run dev"
 cd ..
