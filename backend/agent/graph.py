@@ -1,6 +1,12 @@
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
+from langchain_community.chat_models import ChatOllama
+from langchain_core.messages import SystemMessage, HumanMessage
 from .error_engine import analyze_error
+from .rag import retrieve_context
+
+# Initialize Ollama LLM
+llm = ChatOllama(model="qwen2.5-coder", temperature=0.2)
 
 class AgentState(TypedDict):
     task: str
@@ -11,25 +17,50 @@ class AgentState(TypedDict):
 
 def planner(state: AgentState) -> AgentState:
     print("Planning task...")
-    return {"plan": "Generated Plan"}
+    # Retrieve relevant context via RAG
+    context = retrieve_context(state["task"])
+    
+    prompt = f"""You are an autonomous AI coding agent.
+Given the following user task and codebase context, formulate a step-by-step implementation plan.
+Context:
+{context}
+
+Task: {state['task']}
+"""
+    response = llm.invoke([HumanMessage(content=prompt)])
+    plan = response.content
+    return {"plan": plan, "iterations": state["iterations"]}
 
 def executor(state: AgentState) -> AgentState:
     print("Executing code...")
-    # Simulate an error on first run to trigger Error Engine
-    if state["iterations"] == 0:
-        return {"code": "def faulty(): pass", "error": "SyntaxError: invalid syntax"}
-    return {"code": "def fixed(): pass", "error": None}
+    
+    prompt = f"""You are executing the following plan:
+{state['plan']}
+
+Write the final implementation code. Output ONLY the code, no markdown.
+"""
+    if state["error"] and state["iterations"] > 0:
+        prompt += f"\nPrevious attempt failed with error:\n{state['error']}\nPlease fix this error in your new implementation."
+
+    response = llm.invoke([HumanMessage(content=prompt)])
+    
+    # Simulate an error on first run to test Error Engine
+    if state["iterations"] == 0 and "mock_error" in state["task"]:
+        return {"code": response.content, "error": "SyntaxError: simulated error for testing"}
+        
+    return {"code": response.content, "error": None}
 
 def verifier(state: AgentState) -> AgentState:
     print("Verifying code...")
+    # In a real scenario, this would run tests or syntax checks
     if state["error"]:
-        return state # error found during execution
+        return state
     return state
 
 def error_handler(state: AgentState) -> AgentState:
     print("Error Engine activated...")
     # Utilize Error Engine to self-correct
-    corrected_plan = analyze_error(state["error"])
+    corrected_plan = analyze_error(state["error"], state["code"])
     return {"plan": corrected_plan, "error": None, "iterations": state["iterations"] + 1}
 
 def route_next(state: AgentState):
