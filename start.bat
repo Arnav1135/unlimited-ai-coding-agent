@@ -31,6 +31,7 @@ cd ..
 echo.
 
 echo [3/3] Setting up and starting Python Backend (FastAPI)...
+cd backend
 if not exist "venv\" (
     echo Creating virtual environment...
     python -m venv venv
@@ -39,6 +40,7 @@ call venv\Scripts\activate
 echo Installing Python dependencies...
 call pip install -r requirements.txt
 start "AI Coding Agent" cmd /c "uvicorn main:app --reload --port 3000"
+cd ..
 echo.
 
 echo ========================================================
