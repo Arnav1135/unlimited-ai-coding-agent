@@ -17,8 +17,20 @@ if %errorlevel% neq 0 (
 )
 echo.
 
-echo [2/3] Setting up and starting Python Backend (FastAPI)...
-cd backend
+echo [2/3] Setting up and starting Next.js Frontend...
+cd frontend
+if not exist "node_modules\" (
+    echo Installing Node dependencies...
+    call npm install
+)
+if not exist "out\" (
+    echo Building Next.js static export...
+    call npm run build
+)
+cd ..
+echo.
+
+echo [3/3] Setting up and starting Python Backend (FastAPI)...
 if not exist "venv\" (
     echo Creating virtual environment...
     python -m venv venv
@@ -26,24 +38,12 @@ if not exist "venv\" (
 call venv\Scripts\activate
 echo Installing Python dependencies...
 call pip install -r requirements.txt
-start "FastAPI Backend" cmd /c "uvicorn main:app --reload --port 8080"
-cd ..
-echo.
-
-echo [3/3] Setting up and starting Next.js Frontend...
-cd frontend
-if not exist "node_modules\" (
-    echo Installing Node dependencies...
-    call npm install
-)
-start "Next.js Frontend" cmd /c "npm run dev"
-cd ..
+start "AI Coding Agent" cmd /c "uvicorn main:app --reload --port 3000"
 echo.
 
 echo ========================================================
-echo   Stack is running! 
+echo   Stack is running natively on a single port! 
 echo   - App URL: http://localhost:3000
-echo   - Backend runs internally on port 8080
 echo   - Ensure Ollama is running separately for AI features.
 echo ========================================================
 pause

@@ -17,7 +17,20 @@ if [ $? -ne 0 ]; then
 fi
 echo ""
 
-echo "[2/3] Setting up and starting Python Backend (FastAPI)..."
+echo "[2/3] Setting up Next.js Frontend..."
+cd frontend
+if [ ! -d "node_modules" ]; then
+    echo "Installing Node dependencies..."
+    npm install
+fi
+if [ ! -d "out" ]; then
+    echo "Building Next.js static export..."
+    npm run build
+fi
+cd ..
+echo ""
+
+echo "[3/3] Setting up and starting Python Backend (FastAPI)..."
 cd backend
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
@@ -27,31 +40,18 @@ source venv/bin/activate
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
 # Run in background
-uvicorn main:app --reload --port 8080 &
+uvicorn main:app --reload --port 3000 &
 BACKEND_PID=$!
 cd ..
 echo ""
 
-echo "[3/3] Setting up and starting Next.js Frontend..."
-cd frontend
-if [ ! -d "node_modules" ]; then
-    echo "Installing Node dependencies..."
-    npm install
-fi
-# Run in background
-npm run dev &
-FRONTEND_PID=$!
-cd ..
-echo ""
-
 echo "========================================================"
-echo "  Stack is running!"
+echo "  Stack is running natively on a single port!"
 echo "  - App URL: http://localhost:3000"
-echo "  - Backend runs internally on port 8080"
 echo "  - Ensure Ollama is running separately for AI features."
 echo "  Press Ctrl+C to stop all services."
 echo "========================================================"
 
 # Wait for user interrupt to kill background processes
-trap "kill $BACKEND_PID $FRONTEND_PID" SIGINT
+trap "kill $BACKEND_PID" SIGINT
 wait
